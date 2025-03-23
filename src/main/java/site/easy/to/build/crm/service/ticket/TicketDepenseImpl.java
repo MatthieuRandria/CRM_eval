@@ -47,10 +47,9 @@ public class TicketDepenseImpl implements TicketDepenseService {
     public double getSumTicketDepense(int customerId){
         double res=0;
         List<TicketDepense> tickets = findByCustomerId(customerId);
-        if (tickets.isEmpty() || tickets.size()==0 || tickets!=null) {
-            for (TicketDepense ticketDepense : tickets) {
-                res+=ticketDepense.getMontant();
-            }
+        if (tickets.size()==0) return 0;
+        for (TicketDepense ticketDepense : tickets) {
+            res += ticketDepense.getMontant();
         }
         return res;
     }

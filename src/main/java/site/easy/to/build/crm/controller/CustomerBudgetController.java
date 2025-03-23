@@ -18,6 +18,8 @@ import site.easy.to.build.crm.service.contract.ContractService;
 import site.easy.to.build.crm.service.customer.CustomerBudgetService;
 import site.easy.to.build.crm.service.customer.CustomerLoginInfoService;
 import site.easy.to.build.crm.service.customer.CustomerService;
+import site.easy.to.build.crm.service.lead.LeadDepenseService;
+import site.easy.to.build.crm.service.ticket.TicketDepenseService;
 import site.easy.to.build.crm.util.AuthenticationUtils;
 
 import java.time.LocalDateTime;
@@ -30,13 +32,17 @@ public class CustomerBudgetController {
     private final CustomerLoginInfoService customerLoginInfoService;
     private final CustomerService customerService;
     private final ContractService contractService;
+    private final LeadDepenseService leadDepenseService;
+    private final TicketDepenseService ticketDepenseService;
 
-    public CustomerBudgetController(CustomerBudgetService customerBudgetService, AuthenticationUtils authenticationUtils, CustomerLoginInfoService customerLoginInfoService, ContractService contractService, CustomerService customerService) {
+    public CustomerBudgetController(CustomerBudgetService customerBudgetService, AuthenticationUtils authenticationUtils, CustomerLoginInfoService customerLoginInfoService, ContractService contractService, CustomerService customerService, LeadDepenseService leadDepenseService, TicketDepenseService ticketDepenseService) {
         this.customerBudgetService = customerBudgetService;
         this.authenticationUtils = authenticationUtils;
         this.customerLoginInfoService = customerLoginInfoService;
         this.contractService = contractService;
         this.customerService = customerService;
+        this.leadDepenseService = leadDepenseService;
+        this.ticketDepenseService = ticketDepenseService;
     }
 
 
@@ -72,6 +78,18 @@ public class CustomerBudgetController {
 
         model.addAttribute("budgets", customerBudgets);
         model.addAttribute("sum", sum);
+
+        double totalLeadDepenses=leadDepenseService.getSumDepensesCustomerLeads(customer.getCustomerId());
+        double totalTicketDepenses=ticketDepenseService.getSumTicketDepense(customer.getCustomerId());
+        double total=totalLeadDepenses+totalTicketDepenses;
+
+        model.addAttribute("total", total);
+
+        if (total>=sum*0.8) {
+            model.addAttribute("alertMessage","Alerte: Votre budget a atteint les 80%");
+        }
+
+
         return "customer-info/my-budgets";
     }
 

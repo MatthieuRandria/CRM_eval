@@ -25,13 +25,16 @@ public class CustomerDepenseController {
     private final CustomerService customerService;
     private final LeadDepenseService leadDepenseService;
     private final TicketDepenseService ticketDepenseService;
+    private final CustomerBudgetService customerBudgetService;
 
-    public CustomerDepenseController(AuthenticationUtils authenticationUtils, CustomerLoginInfoService customerLoginInfoService, CustomerService customerService, LeadDepenseService leadDepenseService, TicketDepenseService ticketDepenseService) {
+
+    public CustomerDepenseController(AuthenticationUtils authenticationUtils, CustomerLoginInfoService customerLoginInfoService, CustomerService customerService, LeadDepenseService leadDepenseService, TicketDepenseService ticketDepenseService, CustomerBudgetService customerBudgetService) {
         this.authenticationUtils = authenticationUtils;
         this.customerLoginInfoService = customerLoginInfoService;
         this.customerService = customerService;
         this.leadDepenseService = leadDepenseService;
         this.ticketDepenseService = ticketDepenseService;
+        this.customerBudgetService = customerBudgetService;
     }
 
     @GetMapping("/customer/my-depenses")
@@ -51,9 +54,14 @@ public class CustomerDepenseController {
         model.addAttribute("ticketDepenses",ticketDepenses);
         model.addAttribute("totalTicketDepenses", totalTicketDepenses);
 
-        double total=0;
-        total=totalLeadDepenses+totalTicketDepenses;
+        double total=totalLeadDepenses+totalTicketDepenses;
         model.addAttribute("total", total);
+
+        double budgetGlobal=customerBudgetService.getSum(customer.getCustomerId());
+        model.addAttribute("sum",budgetGlobal);
+        if (total>=budgetGlobal*0.8) {
+            model.addAttribute("alertMessage","Alerte: Votre budget a atteint les 80%");
+        }
 
         return "customer-info/my-depenses";
     }
