@@ -29,6 +29,7 @@ import site.easy.to.build.crm.service.customer.CustomerService;
 import site.easy.to.build.crm.service.drive.GoogleDriveFileService;
 import site.easy.to.build.crm.service.file.FileService;
 import site.easy.to.build.crm.service.lead.LeadActionService;
+import site.easy.to.build.crm.service.lead.LeadDepenseService;
 import site.easy.to.build.crm.service.lead.LeadService;
 import site.easy.to.build.crm.service.settings.LeadEmailSettingsService;
 import site.easy.to.build.crm.service.user.UserService;
@@ -48,6 +49,7 @@ import java.util.regex.Pattern;
 public class LeadController {
 
     private final LeadService leadService;
+    private final LeadDepenseService leadDepenseService;
     private final AuthenticationUtils authenticationUtils;
     private final UserService userService;
     private final CustomerService customerService;
@@ -62,11 +64,12 @@ public class LeadController {
     private final EntityManager entityManager;
 
     @Autowired
-    public LeadController(LeadService leadService, AuthenticationUtils authenticationUtils, UserService userService, CustomerService customerService,
+    public LeadController(LeadService leadService, LeadDepenseService leadDepenseService, AuthenticationUtils authenticationUtils, UserService userService, CustomerService customerService,
                           LeadActionService leadActionService, GoogleCalendarApiService googleCalendarApiService, FileService fileService,
                           GoogleDriveApiService googleDriveApiService, GoogleDriveFileService googleDriveFileService, FileUtil fileUtil,
                           LeadEmailSettingsService leadEmailSettingsService, GoogleGmailApiService googleGmailApiService, EntityManager entityManager) {
         this.leadService = leadService;
+        this.leadDepenseService = leadDepenseService;
         this.authenticationUtils = authenticationUtils;
         this.userService = userService;
         this.customerService = customerService;
@@ -168,7 +171,8 @@ public class LeadController {
     public String createLead(@ModelAttribute("lead") @Validated Lead lead, BindingResult bindingResult,
                              @RequestParam("customerId") int customerId, @RequestParam("employeeId") int employeeId,
                              Authentication authentication, @RequestParam("allFiles")@Nullable String files,
-                             @RequestParam("folderId") @Nullable String folderId, Model model) throws JsonProcessingException {
+                             @RequestParam("folderId") @Nullable String folderId,
+                             @RequestParam("montant")String montant, Model model) throws JsonProcessingException {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         User manager = userService.findById(userId);
@@ -210,6 +214,13 @@ public class LeadController {
 
         Lead createdLead = leadService.save(lead);
         fileUtil.saveFiles(allFiles, createdLead);
+
+        LeadDepense leadDepense=new LeadDepense();
+        leadDepense.setLead(createdLead);
+        leadDepense.setMontant(Double.parseDouble(montant));
+        leadDepense.setNom(lead.getName());
+        leadDepense.setDate(LocalDateTime.now());
+        leadDepenseService.save(leadDepense);
 
         if (lead.getGoogleDrive() != null) {
             fileUtil.saveGoogleDriveFiles(authentication, allFiles, folderId, createdLead);

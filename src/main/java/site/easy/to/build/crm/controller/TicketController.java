@@ -17,6 +17,7 @@ import site.easy.to.build.crm.google.service.acess.GoogleAccessService;
 import site.easy.to.build.crm.google.service.gmail.GoogleGmailApiService;
 import site.easy.to.build.crm.service.customer.CustomerService;
 import site.easy.to.build.crm.service.settings.TicketEmailSettingsService;
+import site.easy.to.build.crm.service.ticket.TicketDepenseService;
 import site.easy.to.build.crm.service.ticket.TicketService;
 import site.easy.to.build.crm.service.user.UserService;
 import site.easy.to.build.crm.util.*;
@@ -35,6 +36,7 @@ import java.util.regex.Pattern;
 public class TicketController {
 
     private final TicketService ticketService;
+    private final TicketDepenseService ticketDepenseService;
     private final AuthenticationUtils authenticationUtils;
     private final UserService userService;
     private final CustomerService customerService;
@@ -44,9 +46,10 @@ public class TicketController {
 
 
     @Autowired
-    public TicketController(TicketService ticketService, AuthenticationUtils authenticationUtils, UserService userService, CustomerService customerService,
+    public TicketController(TicketService ticketService, TicketDepenseService ticketDepenseService, AuthenticationUtils authenticationUtils, UserService userService, CustomerService customerService,
                             TicketEmailSettingsService ticketEmailSettingsService, GoogleGmailApiService googleGmailApiService, EntityManager entityManager) {
         this.ticketService = ticketService;
+        this.ticketDepenseService = ticketDepenseService;
         this.authenticationUtils = authenticationUtils;
         this.userService = userService;
         this.customerService = customerService;
@@ -123,7 +126,9 @@ public class TicketController {
     }
 
     @PostMapping("/create-ticket")
-    public String createTicket(@ModelAttribute("ticket") @Validated Ticket ticket, BindingResult bindingResult, @RequestParam("customerId") int customerId,
+    public String createTicket(@ModelAttribute("ticket") @Validated Ticket ticket, BindingResult bindingResult,
+                               @RequestParam("customerId") int customerId,
+                               @RequestParam("montant") String montant,
                                @RequestParam Map<String, String> formParams, Model model,
                                @RequestParam("employeeId") int employeeId, Authentication authentication) {
 
@@ -168,8 +173,14 @@ public class TicketController {
         ticket.setManager(manager);
         ticket.setEmployee(employee);
         ticket.setCreatedAt(LocalDateTime.now());
-
         ticketService.save(ticket);
+
+        TicketDepense ticketDepense=new TicketDepense();
+        ticketDepense.setTicket(ticket);
+        ticketDepense.setDate(ticket.getCreatedAt());
+        ticketDepense.setNom(ticket.getSubject());
+        ticketDepense.setMontant(Double.parseDouble(montant));
+        ticketDepenseService.save(ticketDepense);
 
         return "redirect:/employee/ticket/assigned-tickets";
     }
