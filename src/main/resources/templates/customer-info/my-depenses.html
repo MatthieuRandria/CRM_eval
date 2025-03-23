@@ -74,7 +74,26 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-12">
+                            <div th:if="${alertMessage}" class="col-12 alert alert-warning">
+                                <span th:text="${alertMessage}"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h3><i class="fas fa-balance-scale"></i></h3>
+                                        <p class="text-muted">Actual Balance</p>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <h2 class="counter text-primary" th:text="${sum}"></h2>
+                                    </div>
+                                </div>
+<!--                                <div class="col-md-12">-->
+<!--                                    <div class="progress">-->
+<!--                                        <div class="progress-bar bg-primary" role="progressbar" style="width: 85%; height: 6px;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+                            </div>
+                            <div class="col-md-6">
                                 <div class="d-flex no-block align-items-center">
                                     <div>
                                         <h3><i class="fas fa-money-check-alt"></i></h3>
@@ -85,10 +104,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12">
-                                <div class="progress">
-                                    <div class="progress-bar bg-blue" role="progressbar" style="width: 85%; height: 6px;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
+                            <div class="col-md-6">
+                                <a href="my-budgets"><button type="submit" class="btn btn-primary m-t-20">Voir Budgets</button></a>
                             </div>
 <!--                            <a href="add-budget"><button type="submit" class="btn btn-primary m-t-20">Ajouter Budget</button></a>-->
                         </div>
