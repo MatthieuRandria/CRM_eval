@@ -21,6 +21,11 @@ public class CustomerBudgetServiceImpl implements CustomerBudgetService {
         return customerBudgetRepository.findById(customerId);
     }
 
+    @Override
+    public List<CustomerBudget> findByCustomerCustomerId(int customerId) {
+        return customerBudgetRepository.findByCustomerCustomerId(customerId);
+    }
+
 
     @Override
     public List<CustomerBudget> findAll() {
@@ -35,8 +40,9 @@ public class CustomerBudgetServiceImpl implements CustomerBudgetService {
     @Override
     public double getSum(int customerId) {
         double sum = 0;
-        List<CustomerBudget>customerBudgets = customerBudgetRepository.findById(customerId);
+        List<CustomerBudget>customerBudgets = customerBudgetRepository.findByCustomerCustomerId(customerId);
         if (customerBudgets != null) {
+//            System.out.println("Budgets Found");
             for (CustomerBudget customerBudget :customerBudgets ) {
                 sum+=customerBudget.getMontant();
             }

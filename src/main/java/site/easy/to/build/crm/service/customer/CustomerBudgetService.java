@@ -8,6 +8,8 @@ import java.util.List;
 public interface CustomerBudgetService {
     public List<CustomerBudget> findById(int customerId);
 
+    public List<CustomerBudget> findByCustomerCustomerId(int customerId);
+
     public List<CustomerBudget> findAll();
 
     public void save(CustomerBudget customerBudget);

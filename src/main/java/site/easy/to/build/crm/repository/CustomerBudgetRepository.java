@@ -11,6 +11,8 @@ import java.util.List;
 public interface CustomerBudgetRepository extends JpaRepository<CustomerBudget, Integer> {
     public List<CustomerBudget> findById(int IdCustomer);
 
+    public List<CustomerBudget> findByCustomerCustomerId(int IdCustomer);
+
     public List<CustomerBudget> findAll();
 
     public List<CustomerBudget> findByIdOrderByDateDesc(int customerId, Pageable pageable);
