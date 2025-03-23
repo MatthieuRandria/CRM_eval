@@ -31,7 +31,7 @@
 <div class="preloader">
     <div class="loader">
         <div class="loader__figure"></div>
-        <p class="loader__label">CRM</p>
+        <p class="loader__label">Depenses</p>
     </div>
 </div>
 <!-- ============================================================== -->
@@ -70,35 +70,80 @@
             <!-- ============================================================== -->
             <!-- Start Page Content -->
             <!-- ============================================================== -->
+            <div class="card-group">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h3><i class="fas fa-money-check-alt"></i></h3>
+                                        <p class="text-muted">Overall Depense</p>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <h2 class="counter text-primary" th:text="${total}"></h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="progress">
+                                    <div class="progress-bar bg-blue" role="progressbar" style="width: 85%; height: 6px;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+<!--                            <a href="add-budget"><button type="submit" class="btn btn-primary m-t-20">Ajouter Budget</button></a>-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
-                <div class="col-lg-12">
+                <div class="col-lg-6">
                     <div class="card">
                         <div class="card-body">
-                            <h4 class="card-title">Leads</h4>
+                            <h4 class="card-title">Lead Depenses Total: <div th:text="${totalLeadDepenses}"></div></h4>
                             <div class="table-responsive m-t-40">
                                 <table id="config-table" class="table display table-bordered table-striped no-wrap">
                                     <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Lead</th>
-                                        <th>phone</th>
-                                        <th>Status</th>
-                                        <th>Employee email</th>
-                                        <th>Employee name</th>
-                                        <th>Show</th>
+                                        <th>Amount</th>
+                                        <th>Libelle</th>
+                                        <th>Date</th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <tr th:if="${leads != null}" th:each="lead : ${leads}">
-                                        <td th:text="${lead.leadId}"></td>
-                                        <td th:text="${lead.name}"></td>
-                                        <td th:text="${lead.phone}"></td>
-                                        <td th:text="${lead.status}"></td>
-                                        <td th:text="${lead.employee.email}"></td>
-                                        <td th:text="${lead.employee.username}"></td>
-                                        <td><a th:href="@{/customer/lead/{id}(id=${lead.leadId})}"><i class="fas fa-eye"></i></a></td>
-<!--                                        <td><a th:href="${home + 'customer/lead/' + ${lead.leadId} }"><i class="fas fa-eye"></i></a></td>-->
-
+                                    <tr th:if="${leadDepenses != null}" th:each="lead : ${leadDepenses}">
+                                        <td th:text="${lead.getId()}"></td>
+                                        <td th:text="${lead.getMontant()}"></td>
+                                        <td th:text="${lead.getNom()}"></td>
+                                        <td th:text="${lead.getDate()}"></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Ticket Depenses Total: <div th:text="${totalTicketDepenses}"></div></h4>
+                            <div class="table-responsive m-t-40">
+                                <table id="config-table2" class="table display table-bordered table-striped no-wrap">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Amount</th>
+                                        <th>Libelle</th>
+                                        <th>Date</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:if="${ticketDepenses != null}" th:each="ticket : ${ticketDepenses}">
+                                        <td th:text="${ticket.getId()}"></td>
+                                        <td th:text="${ticket.getMontant()}"></td>
+                                        <td th:text="${ticket.getNom()}"></td>
+                                        <td th:text="${ticket.getDate()}"></td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -163,6 +208,9 @@
 <script th:src="@{/js/library/dataTables.responsive.min.js}"></script>
 <script>
     $('#config-table').DataTable({
+        responsive: true
+    });
+    $('#config-table2').DataTable({
         responsive: true
     });
 </script>
