@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.google.service.gmail.GoogleGmailApiService;
+import site.easy.to.build.crm.service.customer.CustomerBudgetService;
+import site.easy.to.build.crm.service.customer.CustomerService;
 import site.easy.to.build.crm.service.role.RoleService;
 import site.easy.to.build.crm.service.user.UserProfileService;
 import site.easy.to.build.crm.service.user.UserService;
@@ -35,10 +37,12 @@ public class ManagerController {
     private final GoogleGmailApiService googleGmailApiService;
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
+    private final CustomerService customerService;
+    private final CustomerBudgetService customerBudgetService;
 
     @Autowired
     public ManagerController(AuthenticationUtils authenticationUtils, UserProfileService userProfileService, UserService userService,
-                             Environment environment, GoogleGmailApiService googleGmailApiService, RoleService roleService, PasswordEncoder passwordEncoder) {
+                             Environment environment, GoogleGmailApiService googleGmailApiService, RoleService roleService, PasswordEncoder passwordEncoder, CustomerService customerService, CustomerBudgetService customerBudgetService) {
         this.authenticationUtils = authenticationUtils;
         this.userProfileService = userProfileService;
         this.userService = userService;
@@ -46,6 +50,8 @@ public class ManagerController {
         this.googleGmailApiService = googleGmailApiService;
         this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
+        this.customerService = customerService;
+        this.customerBudgetService = customerBudgetService;
     }
 
     @GetMapping("/manager/all-users")
@@ -60,6 +66,44 @@ public class ManagerController {
 
         model.addAttribute("profiles",profiles);
         return "manager/all-users";
+    }
+
+    @GetMapping("/manager/add-budget")
+    public String showForm(Model model,Authentication authentication){
+        int currentUserId = authenticationUtils.getLoggedInUserId(authentication);
+        User loggedInUser = userService.findById(currentUserId);
+        if(loggedInUser.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+        List<Customer> customers= customerService.findAll();
+        model.addAttribute("customers",customers);
+        model.addAttribute("customerBudget",new CustomerBudget());
+
+        return "customer-info/insert-budget";
+    }
+
+    @PostMapping("/manager/add-budget")
+    public String insertBudget(Model model,
+                               Authentication authentication,
+                               @RequestParam("customerId") int idCustomer,
+                               @Validated @ModelAttribute("customerBudget") CustomerBudget customerBudget,
+                               BindingResult bindingResult) {
+        int currentUserId = authenticationUtils.getLoggedInUserId(authentication);
+        User loggedInUser = userService.findById(currentUserId);
+        if(loggedInUser.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+        if (bindingResult.hasErrors()) {
+            return "customer-info/insert-budget";
+        }
+
+        Customer customer=customerService.findByCustomerId(idCustomer);
+        customerBudget.setCustomer(customer);
+        customerBudget.setDate(LocalDateTime.now());
+        System.out.println(customerBudget.getMontant());
+        customerBudgetService.save(customerBudget);
+
+        return "redirect:/manager/add-budget";
     }
 
     @GetMapping("/manager/show-user/{id}")

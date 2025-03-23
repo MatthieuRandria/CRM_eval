@@ -97,6 +97,7 @@
                     </a>
                     <ul class="collapse">
                         <li><a th:if="${#authorization.expression('hasRole(''ROLE_MANAGER'')')}" th:href="${home + 'employee/customer/manager/all-customers'}">All customers</a></li>
+                        <li><a th:if="${#authorization.expression('hasRole(''ROLE_MANAGER'')')}" th:href="${home + 'manager/add-budget'}">Add Budget</a></li>
                         <li><a th:href="${home + 'employee/customer/my-customers'}">My customers</a></li>
                         <li><a th:href="${home + 'employee/customer/create-customer'}">Create customer</a></li>
                     </ul>
@@ -192,10 +193,10 @@
                         <i class="fas fa-money-bill-alt"></i>
                         <span class="hide-menu">My Budget</span>
                     </a>
-                    <a class="waves-effect waves-dark" th:href="${home + 'customer/my-depenses'}">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span class="hide-menu">My Depenses</span>
-                    </a>
+<!--                    <a class="waves-effect waves-dark" th:href="${home + 'customer/my-depenses'}">-->
+<!--                        <i class="fas fa-tachometer-alt"></i>-->
+<!--                        <span class="hide-menu">My Depenses</span>-->
+<!--                    </a>-->
                 </li>
                 <li class="nav-small-cap">--- Tickets</li>
                 <li>
