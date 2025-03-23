@@ -31,7 +31,7 @@
 <div class="preloader">
     <div class="loader">
         <div class="loader__figure"></div>
-        <p class="loader__label">CRM</p>
+        <p class="loader__label">Budgtes</p>
     </div>
 </div>
 <!-- ============================================================== -->
@@ -70,35 +70,59 @@
             <!-- ============================================================== -->
             <!-- Start Page Content -->
             <!-- ============================================================== -->
+            <div class="card-group">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="col-lg-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h4 class="card-title">Ajouter Budget</h4>
+                                    <form th:action="@{/customer/add-budget}" th:object="${customerBudget}" id="email-form" method="post">
+                                        <label class="m-t-20" for="nom">Libelle:</label>
+                                        <div class="input-group">
+                                            <input type="text" id="nom" th:field="*{nom}" class="form-control">
+                                        </div>
+                                        <div class="input-group">
+                                            <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('nom')}">Nom Invalid!</span>
+                                        </div>
+
+                                        <label class="m-t-20" for="montant">Montant:</label>
+                                        <div class="input-group">
+                                            <input type="number" id="montant" th:field="*{montant}" class="form-control">
+                                        </div>
+                                        <div class="input-group">
+                                            <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('montant')}">Montant Invalid!</span>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary m-t-20">Ajouter</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-body">
-                            <h4 class="card-title">Leads</h4>
+                            <h4 class="card-title">Budgets History</h4>
                             <div class="table-responsive m-t-40">
                                 <table id="config-table" class="table display table-bordered table-striped no-wrap">
                                     <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Lead</th>
-                                        <th>phone</th>
-                                        <th>Status</th>
-                                        <th>Employee email</th>
-                                        <th>Employee name</th>
-                                        <th>Show</th>
+                                        <th>Libelle</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <tr th:if="${leads != null}" th:each="lead : ${leads}">
-                                        <td th:text="${lead.leadId}"></td>
-                                        <td th:text="${lead.name}"></td>
-                                        <td th:text="${lead.phone}"></td>
-                                        <td th:text="${lead.status}"></td>
-                                        <td th:text="${lead.employee.email}"></td>
-                                        <td th:text="${lead.employee.username}"></td>
-                                        <td><a th:href="@{/customer/lead/{id}(id=${lead.leadId})}"><i class="fas fa-eye"></i></a></td>
-<!--                                        <td><a th:href="${home + 'customer/lead/' + ${lead.leadId} }"><i class="fas fa-eye"></i></a></td>-->
-
+                                    <tr th:if="${budgets != null}" th:each="budget : ${budgets}">
+                                        <td th:text="${budget.getId()}"></td>
+                                        <td th:text="${budget.getNom()}"></td>
+                                        <td th:text="${budget.getMontant()}"></td>
+                                        <td th:text="${budget.getDate()}"></td>
                                     </tr>
                                     </tbody>
                                 </table>
