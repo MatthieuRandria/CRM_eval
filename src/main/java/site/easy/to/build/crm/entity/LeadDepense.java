@@ -1,5 +1,6 @@
 package site.easy.to.build.crm.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ public class LeadDepense {
 
     @OneToOne
     @JoinColumn(name = "id_lead")
+//    @JsonIgnore
     private Lead lead;
 
     public LeadDepense() {

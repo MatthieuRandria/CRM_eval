@@ -1,5 +1,6 @@
 package site.easy.to.build.crm.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
@@ -30,6 +31,7 @@ public class CustomerBudget {
 
     @ManyToOne
     @JoinColumn(name = "id_customer", referencedColumnName = "customer_id", nullable = false)
+    @JsonIgnoreProperties("customerBudgets")
     private Customer customer;
 
 

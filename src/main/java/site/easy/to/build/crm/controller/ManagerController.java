@@ -17,7 +17,9 @@ import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.google.service.gmail.GoogleGmailApiService;
 import site.easy.to.build.crm.service.customer.CustomerBudgetService;
 import site.easy.to.build.crm.service.customer.CustomerService;
+import site.easy.to.build.crm.service.lead.LeadDepenseService;
 import site.easy.to.build.crm.service.role.RoleService;
+import site.easy.to.build.crm.service.ticket.TicketDepenseService;
 import site.easy.to.build.crm.service.user.UserProfileService;
 import site.easy.to.build.crm.service.user.UserService;
 import site.easy.to.build.crm.util.AuthenticationUtils;
@@ -39,10 +41,12 @@ public class ManagerController {
     private final PasswordEncoder passwordEncoder;
     private final CustomerService customerService;
     private final CustomerBudgetService customerBudgetService;
+    private final LeadDepenseService leadDepenseService;
+    private final TicketDepenseService ticketDepenseService;
 
     @Autowired
     public ManagerController(AuthenticationUtils authenticationUtils, UserProfileService userProfileService, UserService userService,
-                             Environment environment, GoogleGmailApiService googleGmailApiService, RoleService roleService, PasswordEncoder passwordEncoder, CustomerService customerService, CustomerBudgetService customerBudgetService) {
+                             Environment environment, GoogleGmailApiService googleGmailApiService, RoleService roleService, PasswordEncoder passwordEncoder, CustomerService customerService, CustomerBudgetService customerBudgetService, LeadDepenseService leadDepenseService, TicketDepenseService ticketDepenseService) {
         this.authenticationUtils = authenticationUtils;
         this.userProfileService = userProfileService;
         this.userService = userService;
@@ -52,6 +56,8 @@ public class ManagerController {
         this.passwordEncoder = passwordEncoder;
         this.customerService = customerService;
         this.customerBudgetService = customerBudgetService;
+        this.leadDepenseService = leadDepenseService;
+        this.ticketDepenseService = ticketDepenseService;
     }
 
     @GetMapping("/manager/all-users")
@@ -82,12 +88,11 @@ public class ManagerController {
         return "customer-info/insert-budget";
     }
 
-    @PostMapping("/manager/add-budget")
-    public String insertBudget(Model model,
-                               Authentication authentication,
-                               @RequestParam("customerId") int idCustomer,
-                               @Validated @ModelAttribute("customerBudget") CustomerBudget customerBudget,
-                               BindingResult bindingResult) {
+    @PostMapping("/manager/confirm-TicketDepense")
+    public String confirmTicketDepense(Model model,
+                                 Authentication authentication,
+                                 @Validated @ModelAttribute("ticketDepense") TicketDepense ticketDepense,
+                                 BindingResult bindingResult) {
         int currentUserId = authenticationUtils.getLoggedInUserId(authentication);
         User loggedInUser = userService.findById(currentUserId);
         if(loggedInUser.isInactiveUser()) {
@@ -97,12 +102,29 @@ public class ManagerController {
             return "customer-info/insert-budget";
         }
 
-        Customer customer=customerService.findByCustomerId(idCustomer);
-        customerBudget.setCustomer(customer);
-        customerBudget.setDate(LocalDateTime.now());
-        System.out.println(customerBudget.getMontant());
-        customerBudgetService.save(customerBudget);
+        ticketDepense.setDate(LocalDateTime.now());
+        System.out.println("A confirmer:"+ticketDepense.getMontant());
+        ticketDepenseService.save(ticketDepense);
+        return "redirect:/manager/add-budget";
+    }
 
+    @PostMapping("/manager/confirm-LeadDepense")
+    public String confirmLeadDepense(Model model,
+                                 Authentication authentication,
+                                 @Validated @ModelAttribute("leadDepense") LeadDepense leadDepense,
+                                 BindingResult bindingResult) {
+        int currentUserId = authenticationUtils.getLoggedInUserId(authentication);
+        User loggedInUser = userService.findById(currentUserId);
+        if(loggedInUser.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+        if (bindingResult.hasErrors()) {
+            return "customer-info/insert-budget";
+        }
+
+        leadDepense.setDate(LocalDateTime.now());
+        System.out.println("A confirmer:"+leadDepense.getMontant());
+        leadDepenseService.save(leadDepense);
         return "redirect:/manager/add-budget";
     }
 
@@ -307,5 +329,10 @@ public class ManagerController {
             userService.save(currUser);
         }
         return "redirect:/login";
+    }
+
+    @GetMapping("/database/settings")
+    public String showDBpage(){
+        return "database/settings";
     }
 }

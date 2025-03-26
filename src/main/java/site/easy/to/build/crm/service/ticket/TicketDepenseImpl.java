@@ -9,7 +9,10 @@ import site.easy.to.build.crm.repository.TicketDepenseRepository;
 import site.easy.to.build.crm.repository.TicketRepository;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class TicketDepenseImpl implements TicketDepenseService {
@@ -34,28 +37,39 @@ public class TicketDepenseImpl implements TicketDepenseService {
     @Override
     public List<TicketDepense> findByCustomerId(int customerId) {
         List<Ticket> tickets = ticketRepository.findByCustomerCustomerId(customerId);
-        List<TicketDepense> ticketDepenses=new ArrayList<>();
-        if (tickets.isEmpty() || tickets.size()==0 || tickets!=null) {
-            for (Ticket ticket : tickets) {
-                ticketDepenses.add(ticketDepenseRepository.findByTicketTicketId(ticket.getTicketId()));
-            }
+        if (tickets.isEmpty()) {
+            return Collections.emptyList();
         }
-        return ticketDepenses;
+        return tickets.stream()
+                .map(ticket -> ticketDepenseRepository.findByTicketTicketId(ticket.getTicketId())) // Retourne un seul objet
+                .filter(Objects::nonNull) // Évite les valeurs null
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TicketDepense> findAll() {
+        return ticketDepenseRepository.findAll();
     }
 
     @Override
     public double getSumTicketDepense(int customerId){
-        double res=0;
-        List<TicketDepense> tickets = findByCustomerId(customerId);
-        if (tickets.size()==0) return 0;
-        for (TicketDepense ticketDepense : tickets) {
-            res += ticketDepense.getMontant();
-        }
-        return res;
+        List<TicketDepense> ticketDepenses = this.findByCustomerId(customerId);
+        if (ticketDepenses.isEmpty()) return 0;
+        return ticketDepenses.stream().mapToDouble(TicketDepense::getMontant).sum();
     }
 
     @Override
     public void save(TicketDepense ticketDepense) {
         this.ticketDepenseRepository.save(ticketDepense);
+    }
+
+    @Override
+    public void delete(TicketDepense ticketDepense) {
+        this.ticketDepenseRepository.delete(ticketDepense);
+    }
+
+    @Override
+    public void update(int id,double montant) {
+        this.ticketDepenseRepository.updateTicketDepenseById(id,montant);
     }
 }

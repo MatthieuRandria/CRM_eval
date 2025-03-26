@@ -10,16 +10,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import site.easy.to.build.crm.entity.Contract;
-import site.easy.to.build.crm.entity.Customer;
-import site.easy.to.build.crm.entity.CustomerBudget;
-import site.easy.to.build.crm.entity.CustomerLoginInfo;
+import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.service.contract.ContractService;
 import site.easy.to.build.crm.service.customer.CustomerBudgetService;
 import site.easy.to.build.crm.service.customer.CustomerLoginInfoService;
 import site.easy.to.build.crm.service.customer.CustomerService;
 import site.easy.to.build.crm.service.lead.LeadDepenseService;
 import site.easy.to.build.crm.service.ticket.TicketDepenseService;
+import site.easy.to.build.crm.service.user.UserService;
+import site.easy.to.build.crm.service.util.TauxService;
 import site.easy.to.build.crm.util.AuthenticationUtils;
 
 import java.time.LocalDateTime;
@@ -31,40 +30,20 @@ public class CustomerBudgetController {
     private final AuthenticationUtils authenticationUtils;
     private final CustomerLoginInfoService customerLoginInfoService;
     private final CustomerService customerService;
-    private final ContractService contractService;
+    private final UserService userService;
     private final LeadDepenseService leadDepenseService;
     private final TicketDepenseService ticketDepenseService;
+    private final TauxService tauxService;
 
-    public CustomerBudgetController(CustomerBudgetService customerBudgetService, AuthenticationUtils authenticationUtils, CustomerLoginInfoService customerLoginInfoService, ContractService contractService, CustomerService customerService, LeadDepenseService leadDepenseService, TicketDepenseService ticketDepenseService) {
+    public CustomerBudgetController(CustomerBudgetService customerBudgetService, AuthenticationUtils authenticationUtils, CustomerLoginInfoService customerLoginInfoService, CustomerService customerService, UserService userService, LeadDepenseService leadDepenseService, TicketDepenseService ticketDepenseService, TauxService tauxService) {
         this.customerBudgetService = customerBudgetService;
         this.authenticationUtils = authenticationUtils;
         this.customerLoginInfoService = customerLoginInfoService;
-        this.contractService = contractService;
         this.customerService = customerService;
+        this.userService = userService;
         this.leadDepenseService = leadDepenseService;
         this.ticketDepenseService = ticketDepenseService;
-    }
-
-
-    @PostMapping("/customer/add-budget")
-    public String addBudget(Authentication authentication,
-                            @Validated @ModelAttribute("customerBudget")  CustomerBudget customerBudget,
-                            BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            return "redirect:/customer/add-budget";
-        }
-
-        int customerId = authenticationUtils.getLoggedInUserId(authentication);
-        System.out.println(customerId);
-        CustomerLoginInfo customerLoginInfo = customerLoginInfoService.findById(customerId);
-        Customer customer = customerService.findByEmail(customerLoginInfo.getEmail());
-
-        customerBudget.setCustomer(customer);
-        customerBudget.setDate(LocalDateTime.now());
-        System.out.println(customerBudget.getMontant());
-        customerBudgetService.save(customerBudget);
-
-        return "redirect:/customer/my-budget";
+        this.tauxService = tauxService;
     }
 
     @GetMapping("/customer/my-budgets")
@@ -85,23 +64,58 @@ public class CustomerBudgetController {
 
         model.addAttribute("total", total);
 
-        if (total>=sum*0.8) {
-            model.addAttribute("alertMessage","Alerte: Votre budget a atteint les 80%");
+        // Taux tokony misy any anaty base
+        double taux=tauxService.getMostRecentTaux(1).get(0).getTaux();
+//        System.out.println("Valeur taux:" + taux);
+
+        if (total>=sum*taux/100) {
+            model.addAttribute("alertMessage","Alerte: Votre budget a atteint les "+taux+"%");
         }
-
-
         return "customer-info/my-budgets";
     }
 
-    @GetMapping("/customer/add-budget")
-    public String insertBudgets(Model model,Authentication authentication){
+    @PostMapping("/manager/add-budget")
+    public String insertBudget(Model model,
+                               Authentication authentication,
+                               @RequestParam("customerId") int idCustomer,
+                               @Validated @ModelAttribute("customerBudget") CustomerBudget customerBudget,
+                               BindingResult bindingResult) {
+        int currentUserId = authenticationUtils.getLoggedInUserId(authentication);
+        User loggedInUser = userService.findById(currentUserId);
+        if(loggedInUser.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+        if (bindingResult.hasErrors()) {
+            return "customer-info/insert-budget";
+        }
+
+        Customer customer=customerService.findByCustomerId(idCustomer);
+        customerBudget.setCustomer(customer);
+        customerBudget.setDate(LocalDateTime.now());
+        System.out.println("Budget pour "+customer.getName()+": "+customerBudget.getMontant());
+
+        customerBudgetService.save(customerBudget);
+        return "redirect:/manager/add-budget";
+    }
+
+    @PostMapping("/customer/add-budget")
+    public String addBudget(Authentication authentication,
+                            @Validated @ModelAttribute("customerBudget")  CustomerBudget customerBudget,
+                            BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "redirect:/customer/add-budget";
+        }
+
         int customerId = authenticationUtils.getLoggedInUserId(authentication);
+        System.out.println(customerId);
         CustomerLoginInfo customerLoginInfo = customerLoginInfoService.findById(customerId);
         Customer customer = customerService.findByEmail(customerLoginInfo.getEmail());
-        List<CustomerBudget> customerBudgets=customerBudgetService.findByCustomerCustomerId(customer.getCustomerId());
 
-        model.addAttribute("budgets", customerBudgets);
-        model.addAttribute("customerBudget",new CustomerBudget());
-        return "customer-info/insert-budget";
+        customerBudget.setCustomer(customer);
+        customerBudget.setDate(LocalDateTime.now());
+        System.out.println(customerBudget.getMontant());
+        customerBudgetService.save(customerBudget);
+
+        return "redirect:/customer/my-budget";
     }
 }
