@@ -1,5 +1,6 @@
 package site.easy.to.build.crm.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ public class TicketDepense {
 
     @OneToOne
     @JoinColumn(name = "id_ticket")
+//    @JsonIgnore
     private Ticket ticket;
 
     @Column(name = "nom")

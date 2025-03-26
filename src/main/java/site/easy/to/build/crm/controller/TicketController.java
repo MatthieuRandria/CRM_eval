@@ -15,7 +15,9 @@ import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.entity.settings.TicketEmailSettings;
 import site.easy.to.build.crm.google.service.acess.GoogleAccessService;
 import site.easy.to.build.crm.google.service.gmail.GoogleGmailApiService;
+import site.easy.to.build.crm.service.customer.CustomerBudgetService;
 import site.easy.to.build.crm.service.customer.CustomerService;
+import site.easy.to.build.crm.service.lead.LeadDepenseService;
 import site.easy.to.build.crm.service.settings.TicketEmailSettingsService;
 import site.easy.to.build.crm.service.ticket.TicketDepenseService;
 import site.easy.to.build.crm.service.ticket.TicketService;
@@ -37,6 +39,8 @@ public class TicketController {
 
     private final TicketService ticketService;
     private final TicketDepenseService ticketDepenseService;
+    private final LeadDepenseService leadDepenseService;
+    private final CustomerBudgetService customerBudgetService;
     private final AuthenticationUtils authenticationUtils;
     private final UserService userService;
     private final CustomerService customerService;
@@ -46,10 +50,12 @@ public class TicketController {
 
 
     @Autowired
-    public TicketController(TicketService ticketService, TicketDepenseService ticketDepenseService, AuthenticationUtils authenticationUtils, UserService userService, CustomerService customerService,
+    public TicketController(TicketService ticketService, TicketDepenseService ticketDepenseService, LeadDepenseService leadDepenseService, CustomerBudgetService customerBudgetService, AuthenticationUtils authenticationUtils, UserService userService, CustomerService customerService,
                             TicketEmailSettingsService ticketEmailSettingsService, GoogleGmailApiService googleGmailApiService, EntityManager entityManager) {
         this.ticketService = ticketService;
         this.ticketDepenseService = ticketDepenseService;
+        this.leadDepenseService = leadDepenseService;
+        this.customerBudgetService = customerBudgetService;
         this.authenticationUtils = authenticationUtils;
         this.userService = userService;
         this.customerService = customerService;
@@ -175,15 +181,34 @@ public class TicketController {
         ticket.setCreatedAt(LocalDateTime.now());
         ticketService.save(ticket);
 
+        return createDepense(model,customer,ticket,montant);
+    }
+
+    public String createDepense(Model model,Customer customer,Ticket ticket,String montant) {
         TicketDepense ticketDepense=new TicketDepense();
         ticketDepense.setTicket(ticket);
         ticketDepense.setDate(ticket.getCreatedAt());
         ticketDepense.setNom(ticket.getSubject());
         ticketDepense.setMontant(Double.parseDouble(montant));
-        ticketDepenseService.save(ticketDepense);
 
+        double totalLeadDepenses=leadDepenseService.getSumDepensesCustomerLeads(customer.getCustomerId());
+        double totalTicketDepenses=ticketDepenseService.getSumTicketDepense(customer.getCustomerId());
+        double total=totalLeadDepenses+totalTicketDepenses;
+        double sumBudget=customerBudgetService.getSum(customer.getCustomerId());
+
+        if (sumBudget < total+ticketDepense.getMontant()) {
+            model.addAttribute("alertMessage", "Votre budget va etre depasse, Continuer quand meme? ");
+            model.addAttribute("ticketDepense", ticketDepense);
+            model.addAttribute("sum", sumBudget);
+            model.addAttribute("total", total + ticketDepense.getMontant());
+            return "manager/confirmationTicket";
+        }else{
+            ticketDepenseService.save(ticketDepense);
+        }
         return "redirect:/employee/ticket/assigned-tickets";
+
     }
+
 
     @GetMapping("/update-ticket/{id}")
     public String showTicketUpdatingForm(Model model, @PathVariable("id") int id, Authentication authentication) {
@@ -320,6 +345,7 @@ public class TicketController {
         }
 
         Ticket ticket = ticketService.findByTicketId(id);
+        TicketDepense ticketDepense=ticketDepenseService.findByTicketId(id);
 
         User employee = ticket.getEmployee();
         if(!AuthorizationUtil.checkIfUserAuthorized(employee,loggedInUser)) {
@@ -327,6 +353,7 @@ public class TicketController {
         }
 
         ticketService.delete(ticket);
+        ticketDepenseService.delete(ticketDepense);
         return "redirect:/employee/ticket/assigned-tickets";
     }
 

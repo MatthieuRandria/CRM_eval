@@ -14,6 +14,7 @@ import site.easy.to.build.crm.service.customer.CustomerLoginInfoService;
 import site.easy.to.build.crm.service.customer.CustomerService;
 import site.easy.to.build.crm.service.lead.LeadDepenseService;
 import site.easy.to.build.crm.service.ticket.TicketDepenseService;
+import site.easy.to.build.crm.service.util.TauxService;
 import site.easy.to.build.crm.util.AuthenticationUtils;
 
 import java.util.List;
@@ -26,15 +27,17 @@ public class CustomerDepenseController {
     private final LeadDepenseService leadDepenseService;
     private final TicketDepenseService ticketDepenseService;
     private final CustomerBudgetService customerBudgetService;
+    private final TauxService tauxService;
 
 
-    public CustomerDepenseController(AuthenticationUtils authenticationUtils, CustomerLoginInfoService customerLoginInfoService, CustomerService customerService, LeadDepenseService leadDepenseService, TicketDepenseService ticketDepenseService, CustomerBudgetService customerBudgetService) {
+    public CustomerDepenseController(AuthenticationUtils authenticationUtils, CustomerLoginInfoService customerLoginInfoService, CustomerService customerService, LeadDepenseService leadDepenseService, TicketDepenseService ticketDepenseService, CustomerBudgetService customerBudgetService, TauxService tauxService) {
         this.authenticationUtils = authenticationUtils;
         this.customerLoginInfoService = customerLoginInfoService;
         this.customerService = customerService;
         this.leadDepenseService = leadDepenseService;
         this.ticketDepenseService = ticketDepenseService;
         this.customerBudgetService = customerBudgetService;
+        this.tauxService = tauxService;
     }
 
     @GetMapping("/customer/my-depenses")
@@ -59,8 +62,13 @@ public class CustomerDepenseController {
 
         double budgetGlobal=customerBudgetService.getSum(customer.getCustomerId());
         model.addAttribute("sum",budgetGlobal);
-        if (total>=budgetGlobal*0.8) {
-            model.addAttribute("alertMessage","Alerte: Votre budget a atteint les 80%");
+
+        // Taux tokony misy any anaty base
+        double taux=tauxService.getMostRecentTaux(1).get(0).getTaux();
+        double sum=customerBudgetService.getSum(customer.getCustomerId());
+
+        if (total>=sum*taux/100) {
+            model.addAttribute("alertMessage","Alerte: Votre budget a atteint les "+taux+"%");
         }
 
         return "customer-info/my-depenses";

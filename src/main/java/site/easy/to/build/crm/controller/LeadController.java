@@ -25,6 +25,7 @@ import site.easy.to.build.crm.google.service.acess.GoogleAccessService;
 import site.easy.to.build.crm.google.service.calendar.GoogleCalendarApiService;
 import site.easy.to.build.crm.google.service.drive.GoogleDriveApiService;
 import site.easy.to.build.crm.google.service.gmail.GoogleGmailApiService;
+import site.easy.to.build.crm.service.customer.CustomerBudgetService;
 import site.easy.to.build.crm.service.customer.CustomerService;
 import site.easy.to.build.crm.service.drive.GoogleDriveFileService;
 import site.easy.to.build.crm.service.file.FileService;
@@ -32,6 +33,7 @@ import site.easy.to.build.crm.service.lead.LeadActionService;
 import site.easy.to.build.crm.service.lead.LeadDepenseService;
 import site.easy.to.build.crm.service.lead.LeadService;
 import site.easy.to.build.crm.service.settings.LeadEmailSettingsService;
+import site.easy.to.build.crm.service.ticket.TicketDepenseService;
 import site.easy.to.build.crm.service.user.UserService;
 import site.easy.to.build.crm.util.*;
 
@@ -50,6 +52,8 @@ public class LeadController {
 
     private final LeadService leadService;
     private final LeadDepenseService leadDepenseService;
+    private final TicketDepenseService ticketDepenseService;
+    private final CustomerBudgetService customerBudgetService;
     private final AuthenticationUtils authenticationUtils;
     private final UserService userService;
     private final CustomerService customerService;
@@ -64,12 +68,14 @@ public class LeadController {
     private final EntityManager entityManager;
 
     @Autowired
-    public LeadController(LeadService leadService, LeadDepenseService leadDepenseService, AuthenticationUtils authenticationUtils, UserService userService, CustomerService customerService,
+    public LeadController(LeadService leadService, LeadDepenseService leadDepenseService, TicketDepenseService ticketDepenseService, CustomerBudgetService customerBudgetService, AuthenticationUtils authenticationUtils, UserService userService, CustomerService customerService,
                           LeadActionService leadActionService, GoogleCalendarApiService googleCalendarApiService, FileService fileService,
                           GoogleDriveApiService googleDriveApiService, GoogleDriveFileService googleDriveFileService, FileUtil fileUtil,
                           LeadEmailSettingsService leadEmailSettingsService, GoogleGmailApiService googleGmailApiService, EntityManager entityManager) {
         this.leadService = leadService;
         this.leadDepenseService = leadDepenseService;
+        this.ticketDepenseService = ticketDepenseService;
+        this.customerBudgetService = customerBudgetService;
         this.authenticationUtils = authenticationUtils;
         this.userService = userService;
         this.customerService = customerService;
@@ -215,17 +221,43 @@ public class LeadController {
         Lead createdLead = leadService.save(lead);
         fileUtil.saveFiles(allFiles, createdLead);
 
-        LeadDepense leadDepense=new LeadDepense();
-        leadDepense.setLead(createdLead);
-        leadDepense.setMontant(Double.parseDouble(montant));
-        leadDepense.setNom(lead.getName());
-        leadDepense.setDate(LocalDateTime.now());
-        leadDepenseService.save(leadDepense);
-
         if (lead.getGoogleDrive() != null) {
             fileUtil.saveGoogleDriveFiles(authentication, allFiles, folderId, createdLead);
         }
 
+        return this.createDepense(authentication,model,customer,createdLead,montant);
+
+//        if (lead.getStatus().equals("meeting-to-schedule")) {
+//            return "redirect:/employee/calendar/create-event?leadId=" + lead.getLeadId();
+//        }
+//        if(AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+//            return "redirect:/employee/lead/created-leads";
+//        }
+//        return "redirect:/employee/lead/assigned-leads";
+    }
+
+
+    public String createDepense(Authentication authentication,Model model,Customer customer,Lead lead,String montant) {
+        LeadDepense leadDepense=new LeadDepense();
+        leadDepense.setLead(lead);
+        leadDepense.setMontant(Double.parseDouble(montant));
+        leadDepense.setNom(lead.getName());
+        leadDepense.setDate(LocalDateTime.now());
+
+        double totalLeadDepenses=leadDepenseService.getSumDepensesCustomerLeads(customer.getCustomerId());
+        double totalTicketDepenses=ticketDepenseService.getSumTicketDepense(customer.getCustomerId());
+        double total=totalLeadDepenses+totalTicketDepenses;
+        double sumBudget=customerBudgetService.getSum(customer.getCustomerId());
+
+        if (sumBudget < total+leadDepense.getMontant()) {
+            model.addAttribute("alertMessage", "Votre budget va etre depasse, Continuer quand meme? ");
+            model.addAttribute("leadDepense", leadDepense);
+            model.addAttribute("sum", sumBudget);
+            model.addAttribute("total", total + leadDepense.getMontant());
+            return "manager/confirmationLead";
+        }else{
+            leadDepenseService.save(leadDepense);
+        }
         if (lead.getStatus().equals("meeting-to-schedule")) {
             return "redirect:/employee/calendar/create-event?leadId=" + lead.getLeadId();
         }
@@ -474,8 +506,10 @@ public class LeadController {
         if(!AuthorizationUtil.checkIfUserAuthorized(employee,loggedInUser)) {
             return "error/access-denied";
         }
+        LeadDepense leadDepense=leadDepenseService.findByLeadId(id);
 
         leadService.delete(lead);
+        leadDepenseService.delete(leadDepense);
         return "redirect:/employee/lead/created-leads";
     }
 

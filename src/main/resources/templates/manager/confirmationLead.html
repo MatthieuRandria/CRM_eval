@@ -31,7 +31,7 @@
 <div class="preloader">
     <div class="loader">
         <div class="loader__figure"></div>
-        <p class="loader__label">Ajout Budgtes</p>
+        <p class="loader__label">Depenses</p>
     </div>
 </div>
 <!-- ============================================================== -->
@@ -73,38 +73,42 @@
             <div class="card-group">
                 <div class="card">
                     <div class="card-body">
-                        <div class="col-lg-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h4 class="card-title">Ajouter Budget</h4>
-                                    <form th:action="@{/manager/add-budget}" th:object="${customerBudget}" id="email-form" method="post">
-
-                                        <label class="m-t-20" for="customerId">Customer:</label>
-                                        <div class="input-group">
-                                            <select name="customerId" id="customerId" class="form-control">
-                                                <option th:each="customer : ${customers}" th:text="${customer.name}"
-                                                        th:value="${customer.customerId}"></option>
-                                            </select>
-                                        </div>
-
-                                        <label class="m-t-20" for="nom">Libelle:</label>
-                                        <div class="input-group">
-                                            <input type="text" id="nom" th:field="*{nom}" class="form-control">
-                                        </div>
-                                        <div class="input-group">
-                                            <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('nom')}">Nom Invalid!</span>
-                                        </div>
-
-                                        <label class="m-t-20" for="montant">Montant:</label>
-                                        <div class="input-group">
-                                            <input type="number" id="montant" th:field="*{montant}" class="form-control">
-                                        </div>
-                                        <div class="input-group">
-                                            <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('montant')}">Montant Invalid!</span>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary m-t-20">Ajouter</button>
-                                    </form>
+                        <div class="row">
+                            <div th:if="${alertMessage}" class="col-12 alert alert-warning">
+                                <span th:text="${alertMessage}"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h3><i class="fas fa-balance-scale"></i></h3>
+                                        <p class="text-muted">Actual Balance</p>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <h2 class="counter text-primary" th:text="${sum}"></h2>
+                                    </div>
                                 </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex no-block align-items-center">
+                                    <div>
+                                        <h3><i class="fas fa-money-check-alt"></i></h3>
+                                        <p class="text-muted">Overall Depense</p>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <h2 class="counter text-primary" th:text="${total}"></h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <form th:action="@{/manager/confirm-LeadDepense}" th:object="${leadDepense}" id="email-form" method="post">
+                                    <input type="hidden" id="id" th:field="*{lead}" th:value="${leadDepense.lead.leadId}" class="form-control">
+                                    <input type="hidden" id="montant" th:field="*{montant}" th:value="${leadDepense.montant}" class="form-control">
+                                    <input type="hidden" id="nom" th:field="*{nom}" th:value="${leadDepense.nom}" class="form-control">
+                                    <button type="submit" class="btn btn-success m-t-20">Continuer</button>
+                                </form>
+                                <a th:href="@{home+'/manager/add-budget'}">
+                                    <button type="submit" class="btn btn-danger m-t-20">Annuler</button>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -167,6 +171,9 @@
 <script th:src="@{/js/library/dataTables.responsive.min.js}"></script>
 <script>
     $('#config-table').DataTable({
+        responsive: true
+    });
+    $('#config-table2').DataTable({
         responsive: true
     });
 </script>

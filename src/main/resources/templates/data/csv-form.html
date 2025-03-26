@@ -31,7 +31,7 @@
 <div class="preloader">
     <div class="loader">
         <div class="loader__figure"></div>
-        <p class="loader__label">Ajout Budgtes</p>
+        <p class="loader__label">Insertion</p>
     </div>
 </div>
 <!-- ============================================================== -->
@@ -70,47 +70,53 @@
             <!-- ============================================================== -->
             <!-- Start Page Content -->
             <!-- ============================================================== -->
-            <div class="card-group">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="col-lg-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h4 class="card-title">Ajouter Budget</h4>
-                                    <form th:action="@{/manager/add-budget}" th:object="${customerBudget}" id="email-form" method="post">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="col-12 alert alert-warning" th:if="${error}">
+                        <span th:text="${error}"></span>
+                    </div>
+                    <div class="col-12 alert alert-success" th:if="${alerte}">
+                        <span th:text="${alerte}"></span>
+                    </div>
+                </div>
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h2>Importer un fichier CSV</h2>
+                            <form id="csvForm" th:action="@{/csv-manager/import}" method="POST" enctype="multipart/form-data">
+                                <input type="text" name="separateur" value="," required>
+                                <div id="fileInputs">
+<!--                                    <div class="file-input-container">-->
+<!--                                        <input type="file" name="csvFiles[]" accept=".csv">-->
+<!--                                        <button type="button" onclick="removeFileInput(this)">Supprimer</button>-->
+<!--                                    </div>-->
+                                    <input type="file" name="file" accept=".csv"><br>
+                                    <input type="file" name="file2" accept=".csv"><br>
+                                    <input type="file" name="file3" accept=".csv"><br>
 
-                                        <label class="m-t-20" for="customerId">Customer:</label>
-                                        <div class="input-group">
-                                            <select name="customerId" id="customerId" class="form-control">
-                                                <option th:each="customer : ${customers}" th:text="${customer.name}"
-                                                        th:value="${customer.customerId}"></option>
-                                            </select>
-                                        </div>
-
-                                        <label class="m-t-20" for="nom">Libelle:</label>
-                                        <div class="input-group">
-                                            <input type="text" id="nom" th:field="*{nom}" class="form-control">
-                                        </div>
-                                        <div class="input-group">
-                                            <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('nom')}">Nom Invalid!</span>
-                                        </div>
-
-                                        <label class="m-t-20" for="montant">Montant:</label>
-                                        <div class="input-group">
-                                            <input type="number" id="montant" th:field="*{montant}" class="form-control">
-                                        </div>
-                                        <div class="input-group">
-                                            <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('montant')}">Montant Invalid!</span>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary m-t-20">Ajouter</button>
-                                    </form>
                                 </div>
-                            </div>
+                                <button class="btn btn-primary" type="button" onclick="addFileInput()">Ajouter un fichier</button>
+                                <button class="btn btn-success" type="submit">Envoyer</button>
+                            </form>
+
+                            <script>
+                                function addFileInput() {
+                                    const container = document.createElement('div');
+                                    container.classList.add('file-input-container');
+                                    container.innerHTML =
+                                        `<input type="file" name="csvFiles[]" accept=".csv">
+                                        <button type="button" onclick="removeFileInput(this)">Supprimer</button>`;
+                                    document.getElementById('fileInputs').appendChild(container);
+                                }
+
+                                function removeFileInput(button) {
+                                    button.parentElement.remove();
+                                }
+                            </script>
                         </div>
                     </div>
                 </div>
             </div>
-
             <!-- ============================================================== -->
             <!-- End Page Content -->
             <!-- ============================================================== -->
